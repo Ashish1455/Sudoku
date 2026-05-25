@@ -12,16 +12,22 @@ def highlight(name):
 
     # Deselect previous
     if selected:
-        labels[selected].config(bg="white", fg="black")
+        labels[selected].config(bg="white")
 
     # Highlight clicked one
     position = ((name-1)//9, (name-1)%9)
     selected = name
-    labels[name].config(bg="skyblue", fg="white")
+    labels[name].config(bg="skyblue")
 
-def on_click(event, label_name):
+def on_click(event):
     name = next(k for k, v in labels.items() if v == event.widget)    # find which label was clicked
     highlight(name)
+
+def enter_digit(d):
+    global selected
+    global position
+    if selected and labels[selected].cget('state') == 'normal':
+        labels[selected].config(text=d, fg='blue')
 
 def keypad(cell_size):
     style = ttk.Style()
@@ -29,52 +35,35 @@ def keypad(cell_size):
     frame = ttk.LabelFrame(root, text='KeyPad')
     frame.pack(side='bottom', anchor='sw', padx=10, pady=31)
 
-    b = ttk.Button(frame, text='7')
-    b.grid(row=0, column=0)
-    b1 = ttk.Button(frame, text='8')
-    b1.grid(row=0, column=1)
-    b = ttk.Button(frame, text='9')
-    b.grid(row=0, column=2)
-    b1 = ttk.Button(frame, text='4')
-    b1.grid(row=1, column=0)
-    b = ttk.Button(frame, text='5')
-    b.grid(row=1, column=1)
-    b1 = ttk.Button(frame, text='6')
-    b1.grid(row=1, column=2)
-    b = ttk.Button(frame, text='1')
-    b.grid(row=2, column=0)
-    b1 = ttk.Button(frame, text='2')
-    b1.grid(row=2, column=1)
-    b = ttk.Button(frame, text='3')
-    b.grid(row=2, column=2)
+    digits = [[7, 8, 9], [4, 5, 6], [1, 2, 3]]
+
+    for row_idx, row in enumerate(digits):
+        for col_idx, digit in enumerate(row):
+            btn = ttk.Button(frame, text=str(digit), command=lambda d=digit: enter_digit(d))
+            btn.grid(row=row_idx, column=col_idx)
 
 def board_view(cell_size, board):
-    board_display = tk.Canvas(root, width=9 * cell_size, height=9 * cell_size)
+    board_display = tk.Canvas(root, width=9 * cell_size + 4, height=9 * cell_size + 4)
     board_display.pack(side='left', padx=20)
 
-    board_display.create_rectangle(2, 2, cell_size, cell_size, tags=f'cell_{1}', fill='white')
-    # first row
-    for i in range(1, 9):
-        cell_no = i + 1
-        board_display.create_rectangle(i * cell_size, 2, (i+1) * cell_size, cell_size, tags=f'cell_{cell_no}', fill='white')
-    # first column
-    for i in range(1, 9):
-        cell_no = i*9 + 1
-        board_display.create_rectangle(2, i * cell_size, cell_size, (i+1) * cell_size, tags=f'cell_{cell_no}', fill='white')
-    # rest of board
-    for i in range(1, 9):
-        for j in range(1, 9):
+    for i in range(9):
+        for j in range(9):
             cell_no = i * 9 + j + 1
-            board_display.create_rectangle(i * cell_size, j * cell_size, (i+1) * cell_size, (j+1) * cell_size, tags=f'cell_{cell_no}', fill='white')
+            board_display.create_rectangle(i * cell_size+4, j * cell_size+4, (i+1) * cell_size+4, (j+1) * cell_size+4, tags=f'cell_{cell_no}', fill='white', width=2)
+    # border
+    for k in range(4):
+        pos = k * 3 * cell_size
+        board_display.create_line(pos+4, 4, pos+4, 9 * cell_size+4, width=4, fill='black')
+        board_display.create_line(4, pos+4, 9 * cell_size+4, pos+4, width=4, fill='black')
     # Label on rectangle
     label_name = [i for i in range(1, 82)]
     global labels
     for i in range(9):
         for j in range(9):
             name = label_name[i*9 + j]
-            labels[name] = tk.Label(root, text=board[i][j] if board[i][j] != 0 else ' ', justify='center', font=('Consolas', (3*cell_size)//4))
-            board_display.create_window((j * cell_size)+4, (i * cell_size)+4, window=labels[name], anchor='nw', width=cell_size-6, height=cell_size-6)
-            labels[name].bind("<Button-1>", lambda e: on_click(e, label_name))
+            labels[name] = tk.Label(root, text=board[i][j] if board[i][j] != 0 else ' ', justify='center', state='disabled' if board[i][j] != 0 else 'normal', font=('Consolas', (3*cell_size)//4))
+            board_display.create_window((j * cell_size)+6, (i * cell_size)+6, window=labels[name], anchor='nw', width=cell_size-4, height=cell_size-4)
+            labels[name].bind("<Button-1>", lambda e: on_click(e))
 
     ''' Highlight cells '''
     def move(e):
