@@ -1,4 +1,6 @@
 from Sudoku_solver import solveSudoku
+from view_window import run_window
+
 
 board = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -13,5 +15,6 @@ board = [
     [0, 0, 0, 4, 1, 9, 0, 0, 5],
     [0, 0, 0, 0, 8, 0, 0, 7, 9]
 ]
+
 if __name__ == '__main__':
-    print(solveSudoku(board))
+    run_window(board)

@@ -1,10 +1,51 @@
 import tkinter as tk
 from tkinter import ttk
-from main import board
+from rules import normal_rules
+# from main import board
+
+
 
 selected = None
 position = None
 labels = {}
+
+
+
+''' Highlight cells '''
+def move(e):
+    global selected
+    global position
+    if e.keysym == 'Left':
+        if position[1] > 0:
+            cell_no = position[0]*9 + position[1]
+            highlight(cell_no)
+        else:
+            cell_no = position[0]*9 + position[1] - 9
+            highlight(cell_no)
+    if e.keysym == 'Right':
+        print(position)
+        if position[1] < 8:
+            cell_no = position[0]*9 + position[1] + 2
+            highlight(cell_no)
+        else:
+            cell_no = position[0]*9 + position[1] - 7
+            highlight(cell_no)
+    if e.keysym == 'Up':
+        if position[0] > 0:
+            cell_no = position[0]*9 + position[1] - 8
+            highlight(cell_no)
+        else:
+            cell_no = position[0]*9 + position[1] - 17
+            highlight(cell_no)
+    if e.keysym == 'Down':
+        if position[0] < 8:
+            cell_no = position[0]*9 + position[1] + 10
+            highlight(cell_no)
+        else:
+            cell_no = position[0]*9 + position[1] + 1
+            highlight(cell_no)
+
+
 
 def highlight(name):
     global selected
@@ -19,30 +60,50 @@ def highlight(name):
     selected = name
     labels[name].config(bg="skyblue")
 
+
+
 def on_click(event):
     name = next(k for k, v in labels.items() if v == event.widget)    # find which label was clicked
     highlight(name)
 
+
+
 def enter_digit(d):
     global selected
     global position
+    try:
+        if d.keysym.isdigit():
+            d = int(d.keysym)
+        else:
+            move(d)
+            return
+    except:
+        pass
     if selected and labels[selected].cget('state') == 'normal':
-        labels[selected].config(text=d, fg='blue')
+        if labels[selected].cget('text') == d:
+            labels[selected].config(text='')
+        elif normal_rules(board, position[0], position[1], d):
+            labels[selected].config(text=d, fg='blue')
+        else:
+            labels[selected].config(text=d, fg='red')
 
-def keypad(cell_size):
+
+
+def keypad(root, cell_size):
     style = ttk.Style()
     style.configure('TButton', font=('Arial', 24), padding=(0, cell_size // 2))
     frame = ttk.LabelFrame(root, text='KeyPad')
     frame.pack(side='bottom', anchor='sw', padx=10, pady=31)
 
     digits = [[7, 8, 9], [4, 5, 6], [1, 2, 3]]
-
     for row_idx, row in enumerate(digits):
         for col_idx, digit in enumerate(row):
             btn = ttk.Button(frame, text=str(digit), command=lambda d=digit: enter_digit(d))
             btn.grid(row=row_idx, column=col_idx)
 
-def board_view(cell_size, board):
+
+
+def board_view(root, cell_size, board):
     board_display = tk.Canvas(root, width=9 * cell_size + 4, height=9 * cell_size + 4)
     board_display.pack(side='left', padx=20)
 
@@ -65,35 +126,34 @@ def board_view(cell_size, board):
             board_display.create_window((j * cell_size)+6, (i * cell_size)+6, window=labels[name], anchor='nw', width=cell_size-4, height=cell_size-4)
             labels[name].bind("<Button-1>", lambda e: on_click(e))
 
-    ''' Highlight cells '''
-    def move(e):
-        global selected
-        global position
-        if e.keysym == 'Left':
-            if position[1] > 0:
-                cell_no = position[0]*9 + position[1]
-                highlight(cell_no)
-        if e.keysym == 'Right':
-            if position[1] < 8:
-                cell_no = position[0]*9 + position[1] + 2
-                highlight(cell_no)
-        if e.keysym == 'Up':
-            if position[0] > 0:
-                cell_no = position[0]*9 + position[1] - 8
-                highlight(cell_no)
-        if e.keysym == 'Down':
-            if position[0] < 8:
-                cell_no = position[0]*9 + position[1] + 10
-                highlight(cell_no)
+    root.bind("<Key>", lambda d: enter_digit(d))
 
-    root.bind("<Key>", move)
 
-if __name__ == '__main__':
+
+def run_window(board):
     root = tk.Tk()
     root.title('Sudoku')
     root.state('zoomed')
     root.configure(background='skyblue')
     cell_size = 110
-    board_view(cell_size, board)
-    keypad(cell_size)
+    board_view(root, cell_size, board)
+    keypad(root, cell_size)
     root.mainloop()
+
+
+
+if __name__ == '__main__':
+    board = [
+        [5, 3, 0, 0, 7, 0, 0, 0, 0],
+        [6, 0, 0, 1, 9, 5, 0, 0, 0],
+        [0, 9, 8, 0, 0, 0, 0, 6, 0],
+
+        [8, 0, 0, 0, 6, 0, 0, 0, 3],
+        [4, 0, 0, 8, 0, 3, 0, 0, 1],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
+
+        [0, 6, 0, 0, 0, 0, 2, 8, 0],
+        [0, 0, 0, 4, 1, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 9]
+    ]
+    run_window(board)
