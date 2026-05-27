@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from rules import normal_rules
-# from main import board
+from Sudoku_solver import solveSudoku
 
 
 
 selected = None
-position = None
+position = (0, 0)
 labels = {}
 
 
@@ -20,29 +20,28 @@ def move(e):
             cell_no = position[0]*9 + position[1]
             highlight(cell_no)
         else:
-            cell_no = position[0]*9 + position[1] - 9
+            cell_no = position[0]*9 + 9
             highlight(cell_no)
     if e.keysym == 'Right':
-        print(position)
         if position[1] < 8:
             cell_no = position[0]*9 + position[1] + 2
             highlight(cell_no)
         else:
-            cell_no = position[0]*9 + position[1] - 7
+            cell_no = position[0]*9 + 1
             highlight(cell_no)
     if e.keysym == 'Up':
         if position[0] > 0:
             cell_no = position[0]*9 + position[1] - 8
             highlight(cell_no)
         else:
-            cell_no = position[0]*9 + position[1] - 17
+            cell_no = 8*9 + position[1] + 1
             highlight(cell_no)
     if e.keysym == 'Down':
         if position[0] < 8:
             cell_no = position[0]*9 + position[1] + 10
             highlight(cell_no)
         else:
-            cell_no = position[0]*9 + position[1] + 1
+            cell_no = position[1] + 1
             highlight(cell_no)
 
 
@@ -68,7 +67,7 @@ def on_click(event):
 
 
 
-def enter_digit(d):
+def enter_digit(d, board):
     global selected
     global position
     try:
@@ -77,19 +76,31 @@ def enter_digit(d):
         else:
             move(d)
             return
-    except:
+    except AttributeError:
         pass
     if selected and labels[selected].cget('state') == 'normal':
         if labels[selected].cget('text') == d:
             labels[selected].config(text='')
+            board[position[0]][position[1]] = 0
         elif normal_rules(board, position[0], position[1], d):
+            board[position[0]][position[1]] = d
             labels[selected].config(text=d, fg='blue')
         else:
             labels[selected].config(text=d, fg='red')
+            board[position[0]][position[1]] = d
 
 
 
-def keypad(root, cell_size):
+def check(board):
+    b = [row[:] for row in board]
+    x = solveSudoku(b)
+    if board == x:
+        print('solved', board)
+    else:
+        print('unsolved')
+
+
+def keypad(root, cell_size, board):
     style = ttk.Style()
     style.configure('TButton', font=('Arial', 24), padding=(0, cell_size // 2))
     frame = ttk.LabelFrame(root, text='KeyPad')
@@ -98,8 +109,11 @@ def keypad(root, cell_size):
     digits = [[7, 8, 9], [4, 5, 6], [1, 2, 3]]
     for row_idx, row in enumerate(digits):
         for col_idx, digit in enumerate(row):
-            btn = ttk.Button(frame, text=str(digit), command=lambda d=digit: enter_digit(d))
+            btn = ttk.Button(frame, text=str(digit), command=lambda d=digit: enter_digit(d, board))
             btn.grid(row=row_idx, column=col_idx)
+
+    btn = ttk.Button(frame, text="🗸", command=lambda b=board: check(b))
+    btn.grid(row=0, column=4)
 
 
 
@@ -126,7 +140,7 @@ def board_view(root, cell_size, board):
             board_display.create_window((j * cell_size)+6, (i * cell_size)+6, window=labels[name], anchor='nw', width=cell_size-4, height=cell_size-4)
             labels[name].bind("<Button-1>", lambda e: on_click(e))
 
-    root.bind("<Key>", lambda d: enter_digit(d))
+    root.bind("<Key>", lambda d: enter_digit(d, board))
 
 
 
@@ -137,13 +151,13 @@ def run_window(board):
     root.configure(background='skyblue')
     cell_size = 110
     board_view(root, cell_size, board)
-    keypad(root, cell_size)
+    keypad(root, cell_size, board)
     root.mainloop()
 
 
 
 if __name__ == '__main__':
-    board = [
+    board1 = [
         [5, 3, 0, 0, 7, 0, 0, 0, 0],
         [6, 0, 0, 1, 9, 5, 0, 0, 0],
         [0, 9, 8, 0, 0, 0, 0, 6, 0],
@@ -156,4 +170,4 @@ if __name__ == '__main__':
         [0, 0, 0, 4, 1, 9, 0, 0, 5],
         [0, 0, 0, 0, 8, 0, 0, 7, 9]
     ]
-    run_window(board)
+    run_window(board1)
