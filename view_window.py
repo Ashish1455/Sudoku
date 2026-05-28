@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
 from rules import normal_rules
 from Sudoku_solver import solveSudoku
+from color_theme import *
 
 
 
@@ -52,12 +52,12 @@ def highlight(name):
 
     # Deselect previous
     if selected:
-        labels[selected].config(bg="white")
+        labels[selected].config(bg=CELL_BG if (position[0]//3 + position[1]//3)%2 == 0 else CELL_BG_ALT)
 
     # Highlight clicked one
     position = ((name-1)//9, (name-1)%9)
     selected = name
-    labels[name].config(bg="skyblue")
+    labels[name].config(bg=CELL_SELECTED)
 
 
 
@@ -84,59 +84,68 @@ def enter_digit(d, board):
             board[position[0]][position[1]] = 0
         elif normal_rules(board, position[0], position[1], d):
             board[position[0]][position[1]] = d
-            labels[selected].config(text=d, fg='blue')
+            labels[selected].config(text=d, fg=INPUT_FG)
         else:
-            labels[selected].config(text=d, fg='red')
+            labels[selected].config(text=d, fg=ERROR_FG, bg=CEEL_ERROR_BG)
             board[position[0]][position[1]] = d
 
 
 
-def check(board):
+def check(root, board):
     b = [row[:] for row in board]
     x = solveSudoku(b)
+    mess = tk.Toplevel(root)
+    mess.geometry(f'200x50+{(root.winfo_screenwidth()-300)//2}+{(root.winfo_screenheight()-300)//2}')
+    mess.title('')
+    mess.config(bg=FRAME_BG)
     if board == x:
-        print('solved', board)
+        text = "SOLVED"
+        fg = INPUT_FG
+        bg = CELL_BG
     else:
-        print('unsolved')
+        text = "UNSOLVED"
+        fg = ERROR_FG
+        bg = "#F5DDD8"
+    label = tk.Label(mess, text=text, font=('Arial', 24), bg='white', background=bg, fg=fg, padx=16, pady=8)
+    label.pack()
 
 
-def keypad(root, cell_size, board):
-    style = ttk.Style()
-    style.configure('TButton', font=('Arial', 24), padding=(0, cell_size // 2))
-    frame = ttk.LabelFrame(root, text='KeyPad')
+
+def keypad(root, board):
+    frame = tk.LabelFrame(root, text='KeyPad', bg=KEYPAD_BG, fg=KEYPAD_FG, font=("Consolas", 14, "bold"), labelanchor='n')
     frame.pack(side='bottom', anchor='sw', padx=10, pady=31)
 
     digits = [[7, 8, 9], [4, 5, 6], [1, 2, 3]]
     for row_idx, row in enumerate(digits):
         for col_idx, digit in enumerate(row):
-            btn = ttk.Button(frame, text=str(digit), command=lambda d=digit: enter_digit(d, board))
-            btn.grid(row=row_idx, column=col_idx)
+            btn = tk.Button(frame, text=str(digit), width=3, bg=KEYPAD_BTN_BG, fg=KEYPAD_BTN_FG, activebackground=KEYPAD_BTN_ACTIVE, activeforeground=KEYPAD_BTN_ACTIVE_FG, font=('Consolas', 40), cursor="hand2", command=lambda d=digit: enter_digit(d, board))
+            btn.grid(row=2*row_idx, column=col_idx, rowspan=2)
 
-    btn = ttk.Button(frame, text="🗸", command=lambda b=board: check(b))
-    btn.grid(row=0, column=4)
+    btn = tk.Button(frame, text="🗸", font=('Consolas', 40), width=2, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda b=board: check(root, b))
+    btn.grid(row=0, column=7, rowspan=1)
 
 
 
 def board_view(root, cell_size, board):
-    board_display = tk.Canvas(root, width=9 * cell_size + 4, height=9 * cell_size + 4)
+    board_display = tk.Canvas(root, width=9 * cell_size + 4, height=9 * cell_size + 4, highlightbackground=FRAME_BORDER, highlightthickness=2)
     board_display.pack(side='left', padx=20)
 
     for i in range(9):
         for j in range(9):
             cell_no = i * 9 + j + 1
-            board_display.create_rectangle(i * cell_size+4, j * cell_size+4, (i+1) * cell_size+4, (j+1) * cell_size+4, tags=f'cell_{cell_no}', fill='white', width=2)
+            board_display.create_rectangle(i * cell_size+4, j * cell_size+4, (i+1) * cell_size+4, (j+1) * cell_size+4, tags=f'cell_{cell_no}', outline=GRID_LINE_THIN, width=2)
     # border
     for k in range(4):
         pos = k * 3 * cell_size
-        board_display.create_line(pos+4, 4, pos+4, 9 * cell_size+4, width=4, fill='black')
-        board_display.create_line(4, pos+4, 9 * cell_size+4, pos+4, width=4, fill='black')
+        board_display.create_line(pos+4, 4, pos+4, 9 * cell_size+4, width=4, fill=GRID_LINE_THICK)
+        board_display.create_line(4, pos+4, 9 * cell_size+4, pos+4, width=4, fill=GRID_LINE_THICK)
     # Label on rectangle
     label_name = [i for i in range(1, 82)]
     global labels
     for i in range(9):
         for j in range(9):
             name = label_name[i*9 + j]
-            labels[name] = tk.Label(root, text=board[i][j] if board[i][j] != 0 else ' ', justify='center', state='disabled' if board[i][j] != 0 else 'normal', font=('Consolas', (3*cell_size)//4))
+            labels[name] = tk.Label(root, text=board[i][j] if board[i][j] != 0 else ' ', bg=CELL_BG if (i//3 + j//3)%2 == 0 else CELL_BG_ALT, disabledforeground=INPUT_FG, justify='center', state='disabled' if board[i][j] != 0 else 'normal', font=('Consolas', (3*cell_size)//4))
             board_display.create_window((j * cell_size)+6, (i * cell_size)+6, window=labels[name], anchor='nw', width=cell_size-4, height=cell_size-4)
             labels[name].bind("<Button-1>", lambda e: on_click(e))
 
@@ -148,10 +157,10 @@ def run_window(board):
     root = tk.Tk()
     root.title('Sudoku')
     root.state('zoomed')
-    root.configure(background='skyblue')
+    root.configure(bg=ROOT_BG)
     cell_size = 110
     board_view(root, cell_size, board)
-    keypad(root, cell_size, board)
+    keypad(root, board)
     root.mainloop()
 
 
