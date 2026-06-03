@@ -3,6 +3,7 @@ from idlelib import editor
 from rules import normal_rules
 from Sudoku_solver import solveSudoku
 from color_theme import *
+from sudoku_generator import generator
 
 
 
@@ -121,16 +122,27 @@ def keypad(root, board):
     for row_idx, row in enumerate(digits):
         for col_idx, digit in enumerate(row):
             btn = tk.Button(frame, text=str(digit), width=3, bg=KEYPAD_BTN_BG, fg=KEYPAD_BTN_FG, activebackground=KEYPAD_BTN_ACTIVE, activeforeground=KEYPAD_BTN_ACTIVE_FG, font=('Consolas', 40), cursor="hand2", command=lambda d=digit: enter_digit(d, board))
-            btn.grid(row=2*row_idx, column=col_idx, rowspan=2)
+            btn.grid(row=2*row_idx+1, column=col_idx, rowspan=2)
 
-    btn = tk.Button(frame, text="🗸", font=('Consolas', 18), width=5, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda b=board: check(root, b))
-    btn.grid(row=0, column=3, rowspan=1, ipady=3)
+    btn = tk.Button(frame, text="🗸", font=('Consolas', 18), bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda b=board: check(root, b))
+    btn.grid(row=1, column=3, sticky='nsew')
 
-    editor_btn = tk.Button(frame, text='Edit Mode', font=('Consolas', 20), width=24, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG)
+    editor_btn = tk.Button(frame, text='Edit Mode', font=('Consolas', 20), bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG)
     editor_btn.config(command=lambda : editor(editor_btn))
-    editor_btn.grid(row=7, column=0, columnspan=4)
+    editor_btn.grid(row=7, column=0, columnspan=4, sticky='nsew')
 
+    diffculty_value = tk.IntVar()
+    diffculty = tk.Scale(frame, from_=1, to=5, orient='horizontal', tickinterval=1, showvalue=False, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda val: diffculty_value.set(val))
+    diffculty.grid(row=0, column=0, columnspan=4, sticky='nsew')
 
+    new_board = [[0 for _ in range(9)] for _ in range(9)]
+    new_game_btn = tk.Button(frame, text='New Game', font=('Consolas', 18), bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda b=new_board, diff=diffculty_value: new_game(new_board, diff))
+    new_game_btn.grid(row=2, column=3, sticky='nsew')
+
+def new_game(board, diff):
+    board = generator(board, diff.get())
+    for i in range(1, 82):
+        labels[i].config(text=board[(i-1)//9][(i-1)%9] if board[(i-1)//9][(i-1)%9] != 0 else '', state='normal' if board[(i-1)//9][(i-1)%9] == 0 else 'disabled')
 
 def board_view(root, cell_size, board):
     board_display = tk.Canvas(root, width=9 * cell_size + 4, height=9 * cell_size + 4, highlightbackground=FRAME_BORDER, highlightthickness=2)
