@@ -1,4 +1,5 @@
 import tkinter as tk
+from idlelib import editor
 from rules import normal_rules
 from Sudoku_solver import solveSudoku
 from color_theme import *
@@ -8,6 +9,7 @@ from color_theme import *
 selected = None
 position = (0, 0)
 labels = {}
+mode = 'play'
 
 
 
@@ -121,8 +123,12 @@ def keypad(root, board):
             btn = tk.Button(frame, text=str(digit), width=3, bg=KEYPAD_BTN_BG, fg=KEYPAD_BTN_FG, activebackground=KEYPAD_BTN_ACTIVE, activeforeground=KEYPAD_BTN_ACTIVE_FG, font=('Consolas', 40), cursor="hand2", command=lambda d=digit: enter_digit(d, board))
             btn.grid(row=2*row_idx, column=col_idx, rowspan=2)
 
-    btn = tk.Button(frame, text="🗸", font=('Consolas', 40), width=2, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda b=board: check(root, b))
-    btn.grid(row=0, column=7, rowspan=1)
+    btn = tk.Button(frame, text="🗸", font=('Consolas', 18), width=5, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG, command=lambda b=board: check(root, b))
+    btn.grid(row=0, column=3, rowspan=1, ipady=3)
+
+    editor_btn = tk.Button(frame, text='Edit Mode', font=('Consolas', 20), width=24, bg=KEYPAD_CHECK_BG, fg=KEYPAD_CHECK_FG)
+    editor_btn.config(command=lambda : editor(editor_btn))
+    editor_btn.grid(row=7, column=0, columnspan=4)
 
 
 
@@ -152,6 +158,20 @@ def board_view(root, cell_size, board):
     root.bind("<Key>", lambda d: enter_digit(d, board))
 
 
+
+
+def editor(btn):
+    global mode
+    if mode == 'play':
+        for i in range(1, 82):
+            labels[i].config(state='normal')
+        mode = 'edit'
+        btn.config(relief='sunken')
+    elif mode == 'edit':
+        for i in range(1, 82):
+            labels[i].config(state='disabled' if labels[i].cget('text') != '' else 'normal')
+            mode = 'play'
+            btn.config(relief='raised')
 
 def run_window(board):
     root = tk.Tk()
