@@ -117,4 +117,4 @@ All colours are defined in `color_theme.py` so the visual style can be changed i
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+see [LICENSE](LICENSE) for details.
