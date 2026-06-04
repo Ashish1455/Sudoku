@@ -19,6 +19,5 @@ empty_board[0][0] = 3
 # ]
 
 if __name__ == '__main__':
-    difficulty = 1
-    board = generator(empty_board, difficulty)
+    board = generator(empty_board, 1)
     run_window(board)
