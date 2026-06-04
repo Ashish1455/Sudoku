@@ -1,10 +1,10 @@
-# 🟩 Sudoku
+# Sudoku
 
 A Python desktop Sudoku game built with Tkinter, featuring procedural puzzle generation, a backtracking solver with MRV heuristics, and a polished earthy-green GUI.
 
 ---
 
-## ✨ Features
+## Features
 
 - **Procedural puzzle generation** — every game is unique, seeded from a fully solved board
 - **11 difficulty levels** — from beginner (≈38 clues) to expert minimal (17 clues)
@@ -19,7 +19,7 @@ A Python desktop Sudoku game built with Tkinter, featuring procedural puzzle gen
 
 ---
 
-## 📸 Screenshot
+## Screenshot
 
 ![Sudoku game screenshot](preview.png)
 
