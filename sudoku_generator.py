@@ -1,49 +1,70 @@
 import random
-from Sudoku_solver import find_empty
-from Sudoku_solver import solveSudoku
+from Sudoku_solver import mrv, solveSudoku, precompute_cells
 from rules import normal_rules
 
-def solution_counter(board):
+def postive_diagonal_remove(board, cells):
+    removing = (cells // 3 + random.randrange(-cells//9, cells//9))//3
 
-    empty = find_empty(board)
-    if not empty:
-        return 1
-
-    row, col = empty
-    arr = list(range(1, 10))
-    count = 0
-
-    for i in arr:
-        if normal_rules(board, row, col, i):
-            board[row][col] = i
-            count += solution_counter(board)
-            board[row][col] = 0
-            if count > 1:
-                return count
-
-    return count
-
-def core(board, difficulty):
-
-    goal_cells = 40 - 2*difficulty - random.randrange(2)
-    filled_cells = 81
-
-    while filled_cells > goal_cells:
-        row, col = random.randrange(9), random.randrange(9)
-        if board[row][col] != 0:
-            temp, board[row][col] = board[row][col], 0
-            solutions = solution_counter(board)
-            if solutions != 1:
-                board[row][col] = temp
-            else:
-                filled_cells -= 1
+    for i in range(removing):
+        row, col = random.randrange(3), random.randrange(3)
+        while board[row][col] == 0:
+            row, col = random.randrange(3), random.randrange(3)
+        board[row][col] = 0
+        row, col = random.randrange(3,6), random.randrange(3,6)
+        while board[row][col] == 0:
+            row, col = random.randrange(3, 6), random.randrange(3, 6)
+        board[row][col] = 0
+        row, col = random.randrange(6,9), random.randrange(6,9)
+        while board[row][col] == 0:
+            row, col = random.randrange(6,9), random.randrange(6,9)
+        board[row][col] = 0
 
     return board
 
+def solution_counter(board, cells):
+    rc, arr = mrv(board, cells)
+    if not rc:
+        return 1
+    row, col = rc
+    count = 0
+
+    for i in arr:
+        board[row][col] = i
+        count += solution_counter(board, cells)
+        board[row][col] = 0
+        if count > 1:
+            return count
+    return count
+
+def core(board, difficulty, cells):
+    if difficulty == 11:
+        goal_cells = 17
+    else:
+        goal_cells = 40 - 2*difficulty - random.randrange(2)
+
+    board = postive_diagonal_remove(board, 81 - goal_cells)
+
+    filled_positions = [(r, c) for r in range(9) for c in range(9) if board[r][c] != 0]
+    random.shuffle(filled_positions)
+    filled_cells = len(filled_positions)
+
+    for row, col in filled_positions:
+        if filled_cells <= goal_cells:
+            break
+        temp, board[row][col] = board[row][col], 0
+        solutions = solution_counter(board, cells)
+        if solutions != 1:
+            board[row][col] = temp
+        else:
+            filled_cells -= 1
+
+    return board
 
 def generator(board, difficulty):
+    cells = precompute_cells()
     board = solveSudoku(board, 1)
-    return core(board, difficulty)
+    board = core(board, difficulty, cells)
+    return board
 
 
 if __name__ == '__main__':
