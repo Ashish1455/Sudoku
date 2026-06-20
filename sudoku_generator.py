@@ -7,17 +7,17 @@ def postive_diagonal_remove(board, cells):
 
     for i in range(removing):
         row, col = random.randrange(3), random.randrange(3)
-        while board[row][col] == 0:
+        while board[row][col] == -1:
             row, col = random.randrange(3), random.randrange(3)
-        board[row][col] = 0
+        board[row][col] = -1
         row, col = random.randrange(3,6), random.randrange(3,6)
-        while board[row][col] == 0:
+        while board[row][col] == -1:
             row, col = random.randrange(3, 6), random.randrange(3, 6)
-        board[row][col] = 0
+        board[row][col] = -1
         row, col = random.randrange(6,9), random.randrange(6,9)
-        while board[row][col] == 0:
+        while board[row][col] == -1:
             row, col = random.randrange(6,9), random.randrange(6,9)
-        board[row][col] = 0
+        board[row][col] = -1
 
     return board
 
@@ -31,7 +31,7 @@ def solution_counter(board, cells):
     for i in arr:
         board[row][col] = i
         count += solution_counter(board, cells)
-        board[row][col] = 0
+        board[row][col] = -1
         if count > 1:
             return count
     return count
@@ -51,7 +51,7 @@ def core(board, difficulty, cells):
     for row, col in filled_positions:
         if filled_cells <= goal_cells:
             break
-        temp, board[row][col] = board[row][col], 0
+        temp, board[row][col] = board[row][col], -1
         solutions = solution_counter(board, cells)
         if solutions != 1:
             board[row][col] = temp
@@ -68,7 +68,7 @@ def generator(board, difficulty):
 
 
 if __name__ == '__main__':
-    board1 = [[0 for _ in range(9)] for _ in range(9)]
+    board1 = [[-1 for _ in range(9)] for _ in range(9)]
     board1[0][0] = 3
     difficulty1 = random.randrange(1, 11)
     generator(board1, difficulty1)

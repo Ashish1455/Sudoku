@@ -3,7 +3,7 @@ from idlelib import editor
 from rules import normal_rules
 from Sudoku_solver import solveSudoku
 from color_theme import *
-from sudoku_generator import generator
+from sudoku_generator import generator, solution_counter, precompute_cells
 
 selected = None
 position = (0, 0)
@@ -87,26 +87,16 @@ def enter_digit(d, board):
 def check(root, board):
     b = [row[:] for row in board]
     x = solveSudoku(b)
-    mess = tk.Toplevel(root)
-    mess.geometry(f'200x50+{(root.winfo_screenwidth()-300)//2}+{(root.winfo_screenheight()-300)//2}')
-    mess.title('')
-    mess.config(bg=FRAME_BG)
+    che = [board[i][j] == x[i][j] for i, j in zip(range(9), range(9)) if board[i][j] != 0]
+    c = 1
+    for i in che:
+        c &= i
     if board == x:
-        text = "SOLVED"
-        fg = INPUT_FG
-        bg = CELL_BG
+        tk.messagebox.showinfo("Result", "SOLVED!")
+    elif c:
+        tk.messagebox.showinfo("Result", "CORRECT, BUT NOT SOLVED YET")
     else:
-        text = "UNSOLVED"
-        fg = ERROR_FG
-        bg = "#F5DDD8"
-    label = tk.Label(mess, text=text,
-                     font=('Arial', 24),
-                     bg='white',
-                     background=bg,
-                     fg=fg,
-                     padx=16,
-                     pady=8)
-    label.pack()
+        tk.messagebox.showerror("Result", "INCORRECT")
 
 def keypad(root, board):
     frame = tk.LabelFrame(root,
@@ -153,7 +143,7 @@ def keypad(root, board):
                            bg=KEYPAD_CHECK_BG,
                            fg=KEYPAD_CHECK_FG,
                            cursor="hand2")
-    editor_btn.config(command=lambda : editor(editor_btn))
+    editor_btn.config(command=lambda : editor(editor_btn, board))
     editor_btn.grid(row=7,
                     column=0,
                     columnspan=4,
@@ -223,8 +213,8 @@ def board_view(root, cell_size, board):
         for j in range(9):
             name = label_name[i*9 + j]
             labels[name] = tk.Label(root,
-                                    text=board[i][j] if board[i][j] != 0 else ' ',
-                                    state='disabled' if board[i][j] != 0 else 'normal',
+                                    text=board[i][j] if board[i][j] != -1 else ' ',
+                                    state='disabled' if board[i][j] != -1 else 'normal',
                                     bg=CELL_BG if (i//3 + j//3)%2 == 0 else CELL_BG_ALT,
                                     disabledforeground=INPUT_FG,
                                     justify='center',
@@ -238,7 +228,7 @@ def board_view(root, cell_size, board):
 
     root.bind("<Key>", lambda d: enter_digit(d, board))
 
-def editor(btn):
+def editor(btn, board):
     global mode
     if mode == 'play':
         for i in range(1, 82):
@@ -246,10 +236,22 @@ def editor(btn):
         mode = 'edit'
         btn.config(relief='sunken')
     elif mode == 'edit':
-        for i in range(1, 82):
-            labels[i].config(state='disabled' if labels[i].cget('text') != '' else 'normal')
-            mode = 'play'
-            btn.config(relief='raised')
+        k = 0
+        for r in range(9):
+            for c in range(9):
+                if normal_rules(board, r, c, board[r][c]):
+                    k = 1
+                    break
+            if k:
+                break
+
+        if solution_counter(board, precompute_cells()) != 1 or k:
+            tk.messagebox.showwarning("Warning", "Number of Solution is not One & You zero in it.")
+        else:
+            for i in range(1, 82):
+                labels[i].config(state='disabled' if labels[i].cget('text') != '' else 'normal')
+                mode = 'play'
+                btn.config(relief='raised')
 
 def run_window(board):
     root = tk.Tk()
@@ -259,6 +261,7 @@ def run_window(board):
     cell_size = 110
     board_view(root, cell_size, board)
     keypad(root, board)
+    playdisplay(root, cell_size, board)
     root.mainloop()
 
 if __name__ == '__main__':
